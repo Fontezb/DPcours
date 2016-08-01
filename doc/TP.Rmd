@@ -1,0 +1,358 @@
+---
+title: "Projet sur les données du mil"
+author: 'Promo 2016 Data Science '
+date: '`r as.character(format(Sys.Date(), format="%d/%m/%Y"))`'
+output:
+  html_notebook: default
+  html_document: default
+---
+
+## Organisation
+
+<!-- verification de la version de R et choix d'options-->
+```{r setup, include=FALSE}
+R.v.maj <- as.numeric(R.version$major)
+R.v.min.1 <- as.numeric(strsplit(R.version$minor, "\\.")[[1]][1])
+if(R.v.maj < 2 || (R.v.maj == 3 && R.v.min.1 < 2))
+  stop("requires R >= 3.2", call.=FALSE)
+
+suppressPackageStartupMessages(library(knitr))
+suppressPackageStartupMessages(library(ggplot2))
+## suppressPackageStartupMessages(library(MASS))
+opts_chunk$set(echo=TRUE, warning=TRUE, message=TRUE, cache=FALSE)
+
+options(digits=3)
+seed <- 1859; set.seed(seed)
+```
+
+Nous proposons d'organiser les travaux de TP selon [Noble (PLoS Computational Biology,2009)](http://dx.doi.org/10.1371/journal.pcbi.1000424). Cette même organisation est repectée pour le cours d'initiation au processus de Dirichlet.
+
+```{r project_organization}
+if(Sys.info()["user"] == "fontez"){
+  project.dir <- "C:/Users/fontez/Documents/enseignement/DPcours"
+  lib.dir <- "~/R/win-library/3.2"
+}
+stopifnot(file.exists(project.dir))
+data.dir <- paste0(project.dir, "/data")
+stopifnot(file.exists(data.dir))
+src.dir <- paste0(project.dir, "/src")
+stopifnot(file.exists(src.dir))
+results.dir <- paste0(project.dir, "/results")
+stopifnot(file.exists(results.dir))
+doc.dir <- paste0(project.dir, "/doc")
+stopifnot(file.exists(doc.dir))
+task.dir <- paste0(doc.dir)
+setwd(task.dir)
+```
+
+Cet enseignement sur 20h se compose d'une journée de cours-TP qui se poursuit par un projet à réaliser sous R sur deux après midi. Le projet se déroulera comme suit :
+
+## Objectifs
+
+- <span style="color:green">Biologique</span> : Estimer la structure de populations à partir des données génétiques du mil
+    - Estimer le nombre de populations
+    - Affecter les individus dans les populations
+  
+- <span style="color:green">Statistique computationnelle</span>  : Proposer un modèle, un algorithme d'estimation
+    - Modèle : adapter Onogi et al BMC Bioinformatics 2011
+    - Estimation : écrire le Gibbs sampler
+    - Analyser les sorties du Gibbs
+    - Pour aller plus loin : comparer les résutats avec d'autres approches
+  
+- <span style="color:green">Informatique</span> : paralélliser l'algorithme d'estimation et vérifier ses propriétés
+    - Parallélisation
+    - Vérification du gain de temps et de la distribution sur les coeurs
+
+
+## Description des données
+
+Les données de génotype du Mil (chromosome ??) sont constituées de SNP (single nucleotide polymorphysm) qui ont été filtrés sur plusieurs critères : le MAF (minor allele frequency) et le nombre de données manquantes.
+
+Les données (SNP) sont codées comme suit à chaque locus :
+
+- Homozygote allèle alternatif est codé 0, 
+- Hétérozygote est codé 1 
+- Homozygote allèle de référence est codé 2
+- Donnée manquante codée 9
+
+L'allèle de référence est celui qui est le moins fréquent dans la population. On constate que ce codage donne directement le nombre de copie de l'allèle de référence à chaque locus pour chaque individu.
+
+```{r importation, warning=FALSE}
+# lecture des donnees de genetiques du Mil
+setwd(data.dir)
+data.mil <- read.fwf("GBSQ-MD-Mi_xLEA_maf4.geno",widths = rep(1,55), na.string= "9", header = F)
+
+#View(data.mil)
+```
+
+- <span style="color:green">Description des données</span> :
+    - Nombre d'individus : `r nrow(data.mil)`
+    - Nombre de markers (SNP) : `r ncol(data.mil)`
+    - Histogramme des fréquences alléliques
+```{r histogram_ggplot}
+allele <- data.frame(allele=apply(data.mil,2, "sum",na.rm=TRUE)/(2*apply(!is.na(data.mil),2, "sum")))
+
+ggplot(data=allele, aes(allele)) + 
+  geom_histogram(breaks=seq(0.252, 0.324, by = (0.324- 0.252)/10),
+                 col="red", 
+                 alpha = .2,
+                 fill="green") + 
+  labs(title="Histogram for Allele percentage") +
+  labs(x="Percentage of reference allele", y="Count") 
+
+  #  pour un remplissage différencié : aes(fill=..count..)
+  #  scale_fill_gradient("Count", low = "green", high = "red")
+
+
+
+```
+
+
+<div style="background-color:rgba(0,255,0,0.1); text-align:left; vertical-align: center; padding:10px 0;">
+ <a href="/TP1">
+<span style="font-family:Georgia;font-size:1.4em;">TP</span> 
+
+- AFC sur le tableau disjonctif
+ </a>
+ </div>
+
+## Script estimation DPM pour données génétiques - SNP (Onogi 2011)
+
+<div style="background-color:rgba(0,255,0,0.1); text-align:left; vertical-align: center; padding:10px 0;">
+ <a href="/TD1">
+ <span style="font-family:Georgia;font-size:1.4em;">TD</span>
+
+- Ecrire l'algorithme du MCMC (Gibbs sampler) à partir de l'article d'Onogi (2011) et de la fonction *genetic.crp*  
+- Compléter les fonctions *ajour.gamma* et *vrais.ij*
+ </a>
+ </div>
+
+### Création des fonctions nécessaires
+
+```{r fonctions_dpm}
+
+#---------- fonctions de calculs intermédiares -----------#
+
+ajour.gamma <- function(){
+  
+}
+
+vrais.ij <- function(){
+  
+}
+
+```
+
+
+```{r initialisation,eval=FALSE}
+
+#----- fonction d'initialisation du Gibbs -----------#
+
+initialisation <- function(mydata = data.mil , classes = NULL){
+  
+  # creation du vecteur classe d'assignation aux classes : Tous les individus dans la classe 1 pour commencer
+  if (is.null(classes)) classes <- rep( 1 , nrow(mydata))
+  
+  # nombre d'indivus par classe
+  nn <- as.numeric(table(factor(classes)))
+  
+  # Mise à jour des lois des clusters
+  gamma <- list()
+  for ( i in 1:max(classes) ) gamma[[i]] <- ajour.gamma(mydata[classes == i,])
+  
+  # valeurs en sortie de la fonction
+  return(list(classes=classes, nn=nn, gamma=gamma))
+}
+
+```
+
+```{r genetic.crp}
+#--- Fonction simulation d'un CRP a posteriori ---#
+
+genetic.crp <- function(mydata = data.mil , classes = classes , nn = nn, alpha = alpha, lambda = lambda, J, niter = niter) {
+
+  classes.Gibbs <- NULL
+  
+  for( iter in 1:niter ){
+    
+    #-------------- Gibbs sampler---------------#
+    
+    for ( i in 1:nrow(mydata) ){
+     
+      # 1. remove i from classes
+      
+      nn[classes[i]] <- nn[classes[i]] - 1
+      if (nn[classes[i]] == 0){
+        
+        # supprimer la classe vide
+        gamma[[classes[i]]] <- NULL
+        nn <- nn[-classes[i]]
+        
+        # renuméroter les classes
+        classes[classes > classes[i]] <- classes[classes > classes[i]] - 1
+        
+      } else {
+        
+        # Mise à jour de la loi du cluster sans l'individu i 
+        gamma[[classes[i]]] <- ajour.gamma(mydata[classes == classes[[i]],])
+      }
+      
+    # 2. existing proba
+    
+    num.proba <- NULL
+    
+    for ( j in 1:length(nn) ){
+      num.proba <- c(num.proba, nn[j] * vrais.ij(gamma.j = gamma[[j]], donneei = mydata[i,], J = 2, lambda = lambda))
+    }
+    
+    # 3. new proba
+    
+    num.proba <- c(num.proba, alpha * vrais.ij(gamma.j = gamma[[j]], donneei = mydata[i,], J = J, lambda = lambda))
+    
+    # 4. update
+      
+      classes[i] <- rmultinom(n = 1, size = 1, prob = proba)
+      if (length(nn) < classes[i]) nn[classes[i]] <- 0
+      nn[classes[i]] <- nn[classes[i]] + 1
+      gamma[[classes[i]]] <- ajour.gamma(mydata[classes == classes[[i]],])
+    }
+  
+  # 
+  classes.Gibbs <- rbind(classes.Gibbs,classes)
+  }
+  
+# valeurs en sortie de la fonction
+return(classes.Gibbs = classes.Gibbs, alpha = alpha, lambda = lambda)
+}
+```
+
+```{r}
+#-fonction de mise à jour des paramètres du DP : non implémenté-#
+```
+
+
+### Mise en oeuvre dpm
+
+```{r, dpm_simple,eval=FALSE}
+
+# hyperparamètres
+alpha <- 
+lambda <- 
+J <- 
+
+# paramètres du mcmc
+niter <- 
+
+# programme final dpm
+
+init <- initialisation()
+
+result <- genetic.crp(classes = init$classes , nn = init$nn, alpha = alpha, lambda = lambda, J = J, niter = niter)
+
+```
+
+
+## Analyse des résultats
+
+### Convergence chaîne mcmc
+
+```{r convergence_mcmc,eval=FALSE}
+
+# le nombre K de classes
+
+# l'affectation du premier individu
+
+# choix burnin
+
+burnin <- 
+
+```
+
+### Présentation et commentaire des résultats classification
+
+```{r result_classification,eval=FALSE}
+
+# calcul du maximum a posteriori (map)
+
+simposterior <- result$classes.Gibbs[burnin:niter,]
+
+# i = 1 simple
+
+for ( i in 2:max(simposterior) ){
+  sous_cas <- simposterior[apply(simposterior,2,"max") == i,]
+  
+  # renommer les classes en fonction de la taille (effectif) et en fonction de l'individus de plus bas rang 
+  # puis créer un vecteur des individus sortés dans l'ordre et dans l'ordre des classes (plus petit au plus grand)
+  # puis table
+  interm <- apply(simposterior,1,"sort")
+  prev <- rep("C",6)
+  for(a in 1:6) { 
+    for(b in 1:4) {
+      prev[a] <- paste(prev[a],interm[b,a],sep="")
+    }
+  }
+  table(prev)
+  
+  # garder sur i la classif la plus fréquente
+}
+
+
+
+
+# rajout de la colonne result$map à mydata
+
+# mise en forme (dplyr) et visualisation (ggplot) de la classification
+
+```
+
+## Comparaison une autre approche de réduction de la dimension (optionnel)
+
+```{r tp_apimet}
+
+# Conchetta Burgetta et Muriel Tavaud
+
+```
+
+## Parallelisation 
+
+### Initiation à la parallelisation sous R
+
+### Application à la fonction genetic.crp
+
+```{r parallel_dpm}
+
+# répartition des données sur les clusters : uniform split
+
+# Mise à jour de l'allocation aux super-clusters - label switching
+
+# programme final avec parallelisation initialisation() et genetic.crp()
+
+# detectCores()
+# getDoParWorker()
+# registerDoMC()
+# foreach??
+
+```
+
+### Parallelisation du dpm (Onogi 2011) (optionnel)
+
+## Intérêts-limites parallelisation
+
+```{r evalparallel}
+
+# detectCores()
+# getDoParWorker()
+# registerDoMC()
+# foreach??
+# system.time()
+
+```
+
+
+And here's to you, <span style="background-color:green">Mrs. Robinson</span>, Jesus loves you more than you will know.
+
+Roses are <span style="color:red; font-family:Georgia; font-size:2em;">red.</span>
+
+ <div style="background-color:rgba(0, 0, 0, 0.0470588); text-align:center; vertical-align: middle; padding:40px 0; margin-top:30px">
+ <a href="/blog">VIEW THE BLOG</a>
+ </div>

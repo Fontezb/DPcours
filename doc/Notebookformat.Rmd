@@ -1,0 +1,89 @@
+---
+title: "Processus de Dirichlet : un aperçu"
+output: html_notebook
+date: '`r as.character(format(Sys.Date(), format="%d/%m/%Y"))`'
+---
+
+## Organisation
+
+<!-- verification de la version de R et choix d'options-->
+```{r setup, include=FALSE}
+R.v.maj <- as.numeric(R.version$major)
+R.v.min.1 <- as.numeric(strsplit(R.version$minor, "\\.")[[1]][1])
+if(R.v.maj < 2 || (R.v.maj == 3 && R.v.min.1 < 2))
+  stop("requires R >= 3.2", call.=FALSE)
+
+suppressPackageStartupMessages(library(knitr))
+## suppressPackageStartupMessages(library(MASS))
+opts_chunk$set(echo=TRUE, warning=TRUE, message=TRUE, cache=FALSE)
+
+options(digits=3)
+seed <- 1859; set.seed(seed)
+```
+
+Nous proposons d'organiser les travaux de TP selon [Noble (PLoS Computational Biology, 2009)](http://dx.doi.org/10.1371/journal.pcbi.1000424). Cette même organisation est repectée pour le cours d'initiation au processus de Dirichlet.
+```{r project_organization}
+if(Sys.info()["user"] == "fontez"){
+  project.dir <- "C:/Users/fontez/Documents/enseignement/DPcours"
+  lib.dir <- "~/R/win-library/3.2"
+}
+stopifnot(file.exists(project.dir))
+data.dir <- paste0(project.dir, "/data")
+stopifnot(file.exists(data.dir))
+src.dir <- paste0(project.dir, "/src")
+stopifnot(file.exists(src.dir))
+results.dir <- paste0(project.dir, "/results")
+stopifnot(file.exists(results.dir))
+doc.dir <- paste0(project.dir, "/doc")
+stopifnot(file.exists(doc.dir))
+task.dir <- paste0(doc.dir)
+setwd(task.dir)
+```
+
+Cet enseignement sur 20h se compose d'une journée de cours-TP et d'un projet à réaliser sous R sur deux après midi. Le projet se déroulera comme suit :
+
+- Clonage du répertoire de projet (incluant la fiche de TP) à partir du site de Github
+- TP d'application du processus de Diriclet pour déterminer la structure génétique d'une population de Mil
+  - Initiation à Git, prise en main du site Github
+  - Compléter le notebook du TP sous Rmarkdown (partie mise en oeuvre du DPM et Résultats-Discussion)
+  - Mettre à jour (push) le travail réalisé en TP
+- Travail personnel
+  - Lecture d'articles sur la paraléllisation du processus de Dirichlet (réf)
+  - Poursuivre le TP en proposant une modification de l'algorithme d'estimation du DPM pour permettre sa paraléllisation. L'implémenter sur les données du TP dans le Rmarkdown, compléter la partie Limite et intérêt de la parallélisation du DPM
+  - Deux après midi sont libérées pour ce projet en novembre : Mettre à jour le travail fait sur Github en chaque fin d'après midi. 
+
+
+## Exemple d'applications
+
+```{r importation, warning=FALSE}
+# lecture des donnees de genetiques du Mil
+setwd(data.dir)
+data.mil <- read.fwf("GBSQ-MD-Mi_xLEA_maf4.geno",widths = rep(1,55), header = F)
+View(data.mil)
+```
+
+
+## Introduction sur la loi et le processus de Dirichlet
+
+## Différentes représentations du processus de Dirichlet
+
+## Modèle de mélanges à partir d'un processus de Dirichlet (DPM)
+
+## Estimation
+
+## Paralélisation
+
+## Remerciements et bibliographie
+- transparents de T. Grenager, Z. Ghahramani, Y.W. Teh (lien)
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).

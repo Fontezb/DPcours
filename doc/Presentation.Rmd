@@ -1,0 +1,74 @@
+---
+title: "Processus de Dirichlet : un aperçu"
+author: "B. Fontez, Montpellier SupAgro"
+date: '`r as.character(format(Sys.Date(), format="%d/%m/%Y"))`'
+output: ioslides_presentation
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+suppressPackageStartupMessages(library(knitr))
+## suppressPackageStartupMessages(library(MASS))
+opts_chunk$set(echo=TRUE, warning=TRUE, message=TRUE, cache=FALSE)
+
+options(digits=3)
+seed <- 1859; set.seed(seed)
+```
+
+```{r project_organization}
+if(Sys.info()["user"] == "fontez"){
+  project.dir <- "C:/Users/fontez/Documents/enseignement/DPcours"
+  lib.dir <- "~/R/win-library/3.2"
+}
+stopifnot(file.exists(project.dir))
+data.dir <- paste0(project.dir, "/data")
+stopifnot(file.exists(data.dir))
+src.dir <- paste0(project.dir, "/src")
+stopifnot(file.exists(src.dir))
+results.dir <- paste0(project.dir, "/results")
+stopifnot(file.exists(results.dir))
+doc.dir <- paste0(project.dir, "/doc")
+stopifnot(file.exists(doc.dir))
+task.dir <- paste0(doc.dir)
+setwd(task.dir)
+```
+
+## Shiny Presentation
+
+This R Markdown presentation is made interactive using Shiny. The viewers of the presentation can change the assumptions underlying what's presented and see the results immediately. 
+
+To learn more, see [Interactive Documents](http://rmarkdown.rstudio.com/authoring_shiny.html).
+
+## Interactive Plot
+
+```{r eruptions}
+inputPanel(
+  selectInput("n_breaks", label = "Number of bins:",
+              choices = c(10, 20, 35, 50), selected = 20),
+  
+  sliderInput("bw_adjust", label = "Bandwidth adjustment:",
+              min = 0.2, max = 2, value = 1, step = 0.2)
+)
+
+renderPlot({
+  hist(faithful$eruptions, probability = TRUE, breaks = as.numeric(input$n_breaks),
+       xlab = "Duration (minutes)", main = "Geyser eruption duration")
+  
+  dens <- density(faithful$eruptions, adjust = input$bw_adjust)
+  lines(dens, col = "blue")
+})
+```
+
+## Bullets
+
+- Bullet 1
+- Bullet 2
+- Bullet 3
+
+## R Output
+
+```{r cars}
+summary(cars)
+```
+
+
